@@ -1,0 +1,261 @@
+Imports System.Data
+Imports System.Data.OleDb
+Imports System.Data.SqlClient
+
+Module modSQLCommands
+
+    Public Function DataTable_From_QueryID(ByVal Query_ID As String, Optional ByVal Param0 As String = EMPTY_STRING, Optional ByVal Param1 As String = EMPTY_STRING, Optional ByVal Param2 As String = EMPTY_STRING, _
+                                      Optional ByVal Param3 As String = EMPTY_STRING, Optional ByVal Param4 As String = EMPTY_STRING, Optional ByVal Param5 As String = EMPTY_STRING, Optional ByVal Param6 As String = EMPTY_STRING, _
+                                      Optional ByVal Param7 As String = EMPTY_STRING, Optional ByVal Param8 As String = EMPTY_STRING, Optional ByVal Param9 As String = EMPTY_STRING) As DataTable
+        Dim SQL As String
+        Dim cmd As SqlCommand
+        Dim dt As New DataTable
+        Dim con As New SqlConnection(cnxSQL)
+        Dim sda As New SqlDataAdapter
+
+        SQL = Build_SQL_String(Query_ID)
+        cmd = Create_SQLCommand(SQL, Param0, Param1, Param2, Param3, Param4, Param5, Param6, Param7, Param8, Param9)
+
+        cmd.CommandType = CommandType.Text
+        cmd.Connection = con
+        Try
+            con.Open()
+            sda.SelectCommand = cmd
+            sda.Fill(dt)
+            DataTable_From_QueryID = dt
+        Catch ex As Exception
+            DataTable_From_QueryID = Nothing
+        Finally
+            con.Close()
+            sda.Dispose()
+            con.Dispose()
+        End Try
+
+    End Function
+
+    Public Function Execute_SQL_From_QueryID(ByVal Query_ID As String, Optional ByVal Param0 As String = EMPTY_STRING, Optional ByVal Param1 As String = EMPTY_STRING, Optional ByVal Param2 As String = EMPTY_STRING, _
+                                      Optional ByVal Param3 As String = EMPTY_STRING, Optional ByVal Param4 As String = EMPTY_STRING, Optional ByVal Param5 As String = EMPTY_STRING, Optional ByVal Param6 As String = EMPTY_STRING, _
+                                      Optional ByVal Param7 As String = EMPTY_STRING, Optional ByVal Param8 As String = EMPTY_STRING, Optional ByVal Param9 As String = EMPTY_STRING) As Boolean
+
+        Dim SQL As String
+        Dim cmd As SqlCommand
+        Dim con As New SqlConnection(cnxSQL)
+
+        SQL = Build_SQL_String(Query_ID)
+        cmd = Create_SQLCommand(Sql, Param0, Param1, Param2, Param3, Param4, Param5, Param6, Param7, Param8, Param9)
+
+        cmd.CommandType = CommandType.Text
+        cmd.Connection = con
+        Try
+            con.Open()
+            cmd.ExecuteNonQuery()
+            Execute_SQL_From_QueryID = True
+        Catch ex As Exception
+            Execute_SQL_From_QueryID = False
+        Finally
+            con.Close()
+            con.Dispose()
+        End Try
+    End Function
+
+    Public Function Build_SQL_String(Query_ID As String) As String
+        Dim sqlString As String = String.Empty
+        Dim connexionOLE As New OleDbConnection
+        Dim da As OleDbDataAdapter
+        Dim dt As New DataTable
+        Dim ds As New DataSet
+
+        sqlString = "SELECT Query FROM SYS_QUERY WHERE ROWID = '" & Query_ID & "';"
+
+        'Chaine de connexion
+        connexionOLE.ConnectionString = cnxDBMaster
+        'Ouverture de la connexion
+        connexionOLE.Open()
+
+        Try
+            'Data adapté d'après nos paramètres
+            da = New OleDbDataAdapter(sqlString, connexionOLE)
+            'La Datatable est remplie avec le DataAdapter
+            da.Fill(ds)
+
+            If ds.Tables(0).Rows.Count = 0 Then
+                Build_SQL_String = "Query_ID not found"
+                GoTo ErrorLine
+            End If
+            sqlString = ds.Tables(0).Rows(0)("Query").ToString
+        Catch ex As Exception
+            Build_SQL_String = ex.ToString
+            GoTo ErrorLine
+        End Try
+
+
+        sqlString = sqlString.Replace("{0}", "@param0")
+        sqlString = sqlString.Replace("{1}", "@param1")
+        sqlString = sqlString.Replace("{2}", "@param2")
+        sqlString = sqlString.Replace("{3}", "@param3")
+        sqlString = sqlString.Replace("{4}", "@param4")
+        sqlString = sqlString.Replace("{5}", "@param5")
+        sqlString = sqlString.Replace("{6}", "@param6")
+        sqlString = sqlString.Replace("{7}", "@param7")
+        sqlString = sqlString.Replace("{8}", "@param8")
+        sqlString = sqlString.Replace("{9}", "@param9")
+
+        Build_SQL_String = sqlString
+
+ErrorLine:
+
+    End Function
+    
+    Public Function Create_SQLCommand(ByVal SQL As String, ByVal Param0 As String, ByVal Param1 As String, ByVal Param2 As String, ByVal Param3 As String, ByVal Param4 As String, ByVal Param5 As String, ByVal Param6 As String, _
+                                      ByVal Param7 As String, ByVal Param8 As String, ByVal Param9 As String) As SqlCommand
+
+
+        Using cn As New SqlConnection(cnxSQL), cmd As New SqlCommand(SQL, cn)
+
+            If Param0 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param0", SqlDbType.NVarChar).Value = Param0
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param1 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param1", SqlDbType.NVarChar).Value = Param1
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param2 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param2", SqlDbType.NVarChar).Value = Param2
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param3 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param3", SqlDbType.NVarChar).Value = Param3
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param4 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param4", SqlDbType.NVarChar).Value = Param4
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param5 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param5", SqlDbType.NVarChar).Value = Param5
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param6 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param6", SqlDbType.NVarChar).Value = Param6
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param7 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param7", SqlDbType.NVarChar).Value = Param7
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param8 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param8", SqlDbType.NVarChar).Value = Param8
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param9 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param9", SqlDbType.NVarChar).Value = Param9
+            Else
+                GoTo FinalExit
+            End If
+
+FinalExit:
+            Create_SQLCommand = cmd
+
+        End Using
+    End Function
+    
+    Public Function Create_SQLCommand_Types_Specified(SQL As String, Optional ByVal Param0 As String = EMPTY_STRING, Optional ByVal PType0 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param1 As String = EMPTY_STRING, Optional ByVal PType1 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param2 As String = EMPTY_STRING, Optional ByVal PType2 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param3 As String = EMPTY_STRING, Optional ByVal PType3 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param4 As String = EMPTY_STRING, Optional ByVal PType4 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param5 As String = EMPTY_STRING, Optional ByVal PType5 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param6 As String = EMPTY_STRING, Optional ByVal PType6 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param7 As String = EMPTY_STRING, Optional ByVal PType7 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param8 As String = EMPTY_STRING, Optional ByVal PType8 As SqlDbType = SqlDbType.NVarChar, _
+                                      Optional ByVal Param9 As String = EMPTY_STRING, Optional ByVal PType9 As SqlDbType = SqlDbType.NVarChar) As SqlCommand
+
+
+        Using cn As New SqlConnection(cnxSQL), cmd As New SqlCommand(SQL, cn)
+
+            If Param0 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param0", PType0).Value = Param0
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param1 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param1", PType1).Value = Param1
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param2 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param2", PType2).Value = Param2
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param3 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param3", PType3).Value = Param3
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param4 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param4", PType4).Value = Param4
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param5 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param5", PType5).Value = Param5
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param6 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param6", PType6).Value = Param6
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param7 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param7", PType7).Value = Param7
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param8 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param8", PType8).Value = Param8
+            Else
+                GoTo FinalExit
+            End If
+
+            If Param9 <> EMPTY_STRING Then
+                cmd.Parameters.Add("@param9", PType9).Value = Param9
+            Else
+                GoTo FinalExit
+            End If
+
+FinalExit:
+            Create_SQLCommand_Types_Specified = cmd
+
+        End Using
+    End Function
+    
+End Module
